@@ -1,36 +1,75 @@
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-import java.util.ArrayList;
+import java.io.*;
 
 import org.junit.Test;
 
+import java.util.*;
+
+/*
+ * NOTE: if you wish to create your own text files to write test cases for the Arbitrage question,
+ * you may put them inside the "test" folder
+ */
 public class MyTests {
 	
-	/*TODO: Add your own test cases here!
-	 * We've provided a sample test case for each problem below
-	 * You can use these as building blocks to write your own test cases
+	/*
+	 * the below file contains an arbitrage opportunity by following any of the below cycles of currencies:
+	 * (note that in your implementation, any cycle will suffice)
+	 * 0 -> 1 -> 2 -> 0
+	 * 1 -> 2 -> 0 -> 1
+	 * 2 -> 0 -> 1 -> 2
+	 * 
+	 * (for convenience, this is what the "2d array" that the file holds looks like):
+     * 1.0 2.0 2.0
+     * 0.5 1.0 1.5
+     * 0.5 0.667 1.0
 	 */
-	
 	@Test
-	public void HuffmanSampleTest() {
-		String input = "abc";
-		Huffman h = new Huffman(input);
-		String encoding = h.encode();
-		assertEquals(input, h.decode(encoding));
-		assertEquals("huffman abc compression", Huffman.compressionRatio(input), 0.20833, 0.01);
+	public void arbitrageTriangleSampleTest() throws IOException {
+		String file = "arbitrageTriangle.txt";
+		List<Integer> cycle = Arbitrage.arbitrageOpportunity(file);
+		double[][] exchangeRates = Arbitrage.readExchangeRates(file);
+		//check if the cycle that is outputted will yield an arbitrage opportunity
+		int length = cycle.size();
+		int start = cycle.get(0);
+		int prev = start;
+		double multiplier = 1.0;
+		for (int i = 1; i < length; i++) {
+			int next = cycle.get(i);
+			multiplier *= exchangeRates[prev][next];
+			prev = next;
+		}
+		assertEquals(start, prev); //the list should be cyclical
+		assertEquals(1.5, multiplier, 0.0001);
 	}
 	
+	/*
+	 * MST must exist sample test
+	 */
 	@Test
-	public void IntervalSampleTest() {
-		GreedyDynamicAlgorithms.Interval red = new GreedyDynamicAlgorithms.Interval(1, 3);
-		GreedyDynamicAlgorithms.Interval blue = new GreedyDynamicAlgorithms.Interval(0, 4);
-		ArrayList<GreedyDynamicAlgorithms.Interval> reds = new ArrayList<>();
-		ArrayList<GreedyDynamicAlgorithms.Interval> blues = new ArrayList<>();
-		reds.add(red);
-		blues.add(blue);
-		int expectedOptimal = 1;
-		int actualOptimal = GreedyDynamicAlgorithms.optimalIntervals(reds, blues);
-		assertEquals("interval 1 red 1 blue", expectedOptimal, actualOptimal);
+	public void mustExistExample() {
+		WeightedUndirectedGraph<MST.Weight> g = new WeightedUndirectedGraph<>(4);
+		g.addEdge(0, 1, MST.Weight.MEDIUM);
+		g.addEdge(0, 2, MST.Weight.MEDIUM);
+		g.addEdge(1, 3, MST.Weight.MEDIUM);
+		g.addEdge(2, 3, MST.Weight.LIGHT);
+		Set<Tuple> edges = MST.mustExist(g);
+		assertEquals(1, edges.size());
+		assertTrue(edges.contains(new Tuple(2, 3)));
 	}
-
+	
+	/*
+	 * MST must not exist sample test
+	 */
+	@Test
+	public void mustNotExistExample() {
+		WeightedUndirectedGraph<MST.Weight> g = new WeightedUndirectedGraph<>(4);
+		g.addEdge(0, 1, MST.Weight.MEDIUM);
+		g.addEdge(0, 2, MST.Weight.MEDIUM);
+		g.addEdge(1, 3, MST.Weight.MEDIUM);
+		g.addEdge(2, 3, MST.Weight.LIGHT);
+		Set<Tuple> edges = MST.mustNotExist(g);
+		assertEquals(0, edges.size());
+	}
+	
 }
